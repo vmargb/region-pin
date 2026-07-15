@@ -419,6 +419,21 @@ Calling this again with the pin already showing hides it (toggle)."
     (region-pin-hide)
     (message "All pins deleted.")))
 
+;;; preview buffer minor mode
+ 
+(defvar region-pin-preview-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map "q" #'region-pin-hide)
+    (define-key map "n" #'region-pin-next)
+    (define-key map "p" #'region-pin-previous)
+    (define-key map "d" #'region-pin-delete-current)
+    map)
+  "Keymap active in region-pin preview buffers.")
+ 
+(define-minor-mode region-pin-preview-mode
+  "Minor mode for the region-pin preview buffer."
+  :keymap region-pin-preview-mode-map)
+
 ;; load any previously saved pins as soon as the package is loaded
 (region-pin--load)
 
