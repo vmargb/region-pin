@@ -180,6 +180,29 @@ Plist keys: :text :mode :file :line :date.")
       (deactivate-mark)
       (message "Pinned region as \"%s\"" name))))
 
+;;;###autoload
+(defun region-pin-instant ()
+  "Immediately display the active region as a floating pin.
+Unlike `region-pin-save', this does not persist the pin to disk."
+  (interactive)
+  (unless (use-region-p)
+    (user-error "No active region to pin"))
+  (let ((beg (region-beginning))
+        (end (region-end)))
+    (if (fboundp 'font-lock-ensure)
+        (font-lock-ensure beg end)
+      (with-no-warnings (font-lock-fontify-region beg end)))
+    (let* ((text (buffer-substring beg end))
+           (name (region-pin--default-name text))
+           (pin (list :text text
+                      :mode major-mode
+                      :file (or (buffer-file-name) (buffer-name))
+                      :line (line-number-at-pos beg)
+                      :date (format-time-string "%Y-%m-%d %H:%M"))))
+      (deactivate-mark)
+      (region-pin--display name pin))))
+
+
 ;;; Sizing
 
 (defun region-pin--content-cols-rows (buf)
