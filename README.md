@@ -8,25 +8,24 @@
 
 ---
 
-## The problem it solves:
-You're editing a function that uses a long struct, function (or any other chunk of code)
-defined far away in your code or in another file, and you keep
+## The problem this solves:
+You're editing code that uses a long struct, function (or any other chunk of code)
+defined somewhere far away or in another file, and you keep
 jumping back and forth to remember the field or arg names. `region-pin` lets you save
 that snippet once under a name, then preview a syntax-highlighted
-floating preview of it in the corner of the window. 
+floating preview of it in the corner of your window. 
 
 ### Why not just split the window?
 
-This was the design of *v0.1.0*, and it wastes space. A full-width split
-ends up showing a huge blank margin of wasted space next to the snippet you actually want.
-Not to mention, when you already have a window split, adding an additional
-one becomes inconvenient.
+This was the design of *v0.1.0*, and it wasted space. A full-width split
+ends up showing a huge blank margin of unused space next to the snippet you actually want.
+Not to mention, when you already have a complicated window configuration set up,
+adding one more gets even messier.
 
-Instead, a `region-pin` *floats* at the top of the frame regardless of your window configuration.
+Instead, `region-pin` *floats* at the top of the frame regardless of your window configuration.
 
-However, in terminal Emacs, it automatically falls back to the
-small window split docked to the top of the frame since it can't create
-child frames.
+However, terminal Emacs doesn't support child frames, in this case it
+automatically falls back to a window split docked to the top of the frame.
 
 ## Install
 
