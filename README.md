@@ -3,7 +3,6 @@
 <div align="center">
   <img src="region-pin-example.png" alt="region-pin demo" width="800"/>
   <p><em><code>region-pin</code> demo</em></p>
-  <br>
 </div>
 
 ---
@@ -44,12 +43,13 @@ Or with `use-package` + `:load-path`:
 ## Keybindings
 
 ```elisp
-(global-set-key (kbd "C-c p p") #'region-pin-save)
-(global-set-key (kbd "C-c p s") #'region-pin-show)
-(global-set-key (kbd "C-c p h") #'region-pin-hide)
-(global-set-key (kbd "C-c p n") #'region-pin-next)
-(global-set-key (kbd "C-c p P") #'region-pin-previous)
-(global-set-key (kbd "C-c p d") #'region-pin-delete)
+(global-set-key (kbd "C-c p i") #'region-pin-instant) ; instantly pin region (without a name)
+(global-set-key (kbd "C-c p p") #'region-pin-save)    ; save region with a name
+(global-set-key (kbd "C-c p s") #'region-pin-show)    ; show a saved/named region
+(global-set-key (kbd "C-c p h") #'region-pin-hide)    ; hide any existing region pins
+(global-set-key (kbd "C-c p n") #'region-pin-next)    ; go to next named region
+(global-set-key (kbd "C-c p P") #'region-pin-previous); go to previous named region
+(global-set-key (kbd "C-c p d") #'region-pin-delete)  ; delete a named region
 ```
 
 ## Customization
