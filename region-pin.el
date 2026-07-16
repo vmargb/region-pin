@@ -285,26 +285,24 @@ different parent than TARGET, it's deleted and recreated instead of reparented."
              (horizontal-scroll-bars . nil)
              (left-fringe . 4)
              (right-fringe . 4)
-             (internal-border-width . 1))))
-    (set-face-background 'internal-border
-                          (face-attribute 'region-pin-border-face :background nil t)
-                          region-pin--frame))
+             (internal-border-width . ,region-pin-border-width))))
+    (region-pin--apply-border region-pin--frame))
+  ;; dynamically update width and color in case they changed since creation
+  (set-frame-parameter region-pin--frame 'internal-border-width region-pin-border-width)
+  (region-pin--apply-border region-pin--frame)
   region-pin--frame)
 
-(defun region-pin--frame-position (frame cols rows)
-  "Return (LEFT . TOP) pixel position, relative to the parent frame.
-For a child FRAME sized COLS x ROWS, based on `region-pin-position'."
+(defun region-pin--frame-position (frame)
+  "Return (LEFT . TOP) pixel position, relative to the parent FRAME."
   (let* ((parent (frame-parent frame))
          (win (frame-selected-window parent))
          (win-left (window-pixel-left win))
          (win-top (window-pixel-top win))
          (win-width (window-pixel-width win))
-         (cw (frame-char-width frame))
-         (ch (frame-char-height frame))
-         (px-width (+ (* cols cw) 10))
-         (px-height (+ (* rows ch) (if header-line-format (line-pixel-height) 0)))
+         ;; pixel width replaces manual 'cols * cw'
+         (px-width (frame-pixel-width frame))
+         (px-height (frame-pixel-height frame))
          (margin region-pin-margin))
-    (ignore px-height)
     (pcase region-pin-position
       ('top-right (cons (+ win-left (max margin (- win-width px-width margin))) (+ win-top margin)))
       ('top-left (cons (+ win-left margin) (+ win-top margin)))
@@ -321,8 +319,9 @@ For a child FRAME sized COLS x ROWS, based on `region-pin-position'."
     (set-window-buffer (frame-root-window frame) buf)
     (set-window-dedicated-p (frame-root-window frame) t)
     (set-frame-size frame cols (1+ rows))
-    (let ((pos (region-pin--frame-position frame cols rows)))
-      (set-frame-position frame (car pos) (cdr pos)))
+    ;; pass just the frame, it already knows its own pixel dimensions
+    (let ((pos (region-pin--frame-position frame)))
+        (set-frame-position frame (car pos) (cdr pos)))
     (make-frame-visible frame)
     ;; emacs shifts focus to the child frame
     ;; force it back so keyboard input keeps going to the code
@@ -435,7 +434,7 @@ Calling this again with the pin already showing hides it (toggle)."
     (message "All pins deleted.")))
 
 ;;; preview buffer minor mode
- 
+
 (defvar region-pin-preview-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map "q" #'region-pin-hide)
@@ -444,7 +443,7 @@ Calling this again with the pin already showing hides it (toggle)."
     (define-key map "d" #'region-pin-delete-current)
     map)
   "Keymap active in region-pin preview buffers.")
- 
+
 (define-minor-mode region-pin-preview-mode
   "Minor mode for the region-pin preview buffer."
   :keymap region-pin-preview-mode-map)
