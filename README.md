@@ -1,23 +1,33 @@
 # region-pin.el
 
-**The problem it solves:**
-You're editing a function that uses a big struct, function (or any other chunk of code)
-defined somewhere far away in the file or in another file, and you keep
-jumping back and forth to remember field or arg names. `region-pin` lets you save
+Keeps pinned code snippets visible while you work.
+
+<div align="center">
+  <img src="region-pin-demo.png" alt="region-pin demo" width="600"/>
+  <p><em><code>region-pin</code> demo</em></p>
+  <br>
+</div>
+
+---
+
+## The problem it solves:
+You're editing a function that uses a long struct, function (or any other chunk of code)
+defined far away in your code or in another file, and you keep
+jumping back and forth to remember the field or arg names. `region-pin` lets you save
 that snippet once under a name, then preview a syntax-highlighted
-floating preview of it in the corner of the buffer. 
+floating preview of it in the corner of the window. 
 
-## Why not just split the window?
+### Why not just split the window?
 
-That's what the first version did, and it wastes space, a full-width split
-shows a huge blank margin of wasted space next to the snippet you actually want.
+That's what *v0.1.0* did, and it wastes space, a full-width split
+ends up showing a huge blank margin of wasted space next to the snippet you actually want.
 Not to mention, when you already have a window split, adding an additional
 one becomes inconvenient.
 
-Instead, a `region-pin` floats at the top of the frame regardless of your window configuration.
+Instead, a `region-pin` *floats* at the top of the frame regardless of your window configuration.
 
-However, in terminal Emacs, it automatically falls
-back to the small window docked to the top of the frame since it can't create
+However, in terminal Emacs, it automatically falls back to the
+small window split docked to the top of the frame since it can't create
 child frames.
 
 ## Install
