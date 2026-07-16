@@ -65,8 +65,15 @@ It never stretches to fill the window."
   :group 'region-pin)
 
 (defface region-pin-border-face
-  '((t :inherit shadow))
+  '((((background dark)) :background "#444444")  ;; dark theme border
+    (((background light)) :background "#cccccc") ;; light theme border
+    (t :inherit shadow))                         ;; fallback
   "Face used for the border color."
+  :group 'region-pin)
+
+(defcustom region-pin-border-width 1
+  "Width of the border around the floating preview in pixels."
+  :type 'integer
   :group 'region-pin)
 
 (defvar region-pin--pins (make-hash-table :test 'equal)
@@ -242,6 +249,13 @@ capped by max width and height."
 
 ;; =============================================
 ;; main backend: floating child frame (GUI)
+
+(defun region-pin--apply-border (frame)
+  "Set FRAME's border color from `region-pin-border-face'."
+  (let ((color (face-background 'region-pin-border-face nil t)))
+    (set-face-background 'internal-border color frame)
+    (when (facep 'child-frame-border)
+      (set-face-background 'child-frame-border color frame))))
 
 (defun region-pin--ensure-frame (target)
   "Return a live child frame parented to TARGET.
