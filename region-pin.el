@@ -1,7 +1,7 @@
 ;;; region-pin.el --- Syntax-highlighted code snippets, pinned over your buffer -*- lexical-binding: t; -*-
 
 ;; Author: vmargb
-;; Version: 0.2.0
+;; Version: 0.2.1
 ;; Package-Requires: ((emacs "26.1"))
 ;; Keywords: convenience, tools
 
@@ -164,7 +164,7 @@ Plist keys: :text :mode :file :line :date.")
     (if (fboundp 'font-lock-ensure)
         (font-lock-ensure beg end)
       (with-no-warnings (font-lock-fontify-region beg end)))
-    (let* ((text (buffer-substring beg end))
+    (let* ((text (buffer-substring-no-properties beg end))
            (default-name (region-pin--default-name text))
            (name (or name
                      (read-string (format "Pin name (%s): " default-name)
@@ -192,7 +192,7 @@ Unlike `region-pin-save', this does not persist the pin to disk."
     (if (fboundp 'font-lock-ensure)
         (font-lock-ensure beg end)
       (with-no-warnings (font-lock-fontify-region beg end)))
-    (let* ((text (buffer-substring beg end))
+    (let* ((text (buffer-substring-no-properties beg end))
            (name (region-pin--default-name text))
            (pin (list :text text
                       :mode major-mode
