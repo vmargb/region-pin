@@ -1,9 +1,7 @@
 # region-pin.el
 
-Keeps pinned code snippets visible while you work.
-
 <div align="center">
-  <img src="region-pin-demo.png" alt="region-pin demo" width="600"/>
+  <img src="region-pin-example.png" alt="region-pin demo" width="800"/>
   <p><em><code>region-pin</code> demo</em></p>
   <br>
 </div>
@@ -19,7 +17,7 @@ floating preview of it in the corner of the window.
 
 ### Why not just split the window?
 
-That's what *v0.1.0* did, and it wastes space, a full-width split
+This was the design of *v0.1.0*, and it wastes space. A full-width split
 ends up showing a huge blank margin of wasted space next to the snippet you actually want.
 Not to mention, when you already have a window split, adding an additional
 one becomes inconvenient.
