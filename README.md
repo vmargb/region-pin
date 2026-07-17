@@ -14,7 +14,7 @@ jumping back and forth to remember the field or arg names. `region-pin` lets you
 that snippet once under a name, then preview a syntax-highlighted
 floating preview of it in the corner of your window. 
 
-### Why not just split the window?
+#### Why not just split the window?
 
 This was the design of *v0.1.0*, and it wasted space. A full-width split
 ends up showing a huge blank margin of unused space next to the snippet you actually want.
@@ -25,6 +25,11 @@ Instead, `region-pin` *floats* at the top of the frame regardless of your window
 
 However, terminal Emacs doesn't support child frames, in this case it
 automatically falls back to a window split docked to the top of the frame.
+
+#### ..LSP?
+LSP definitely solves this problem easily. However it's a heavy solution
+for a simple task. And also, not everyone chooses to use LSP, I certainly prefer
+lighter options when they exist, such as [dumbjump](https://github.com/jacktasia/dumb-jump), and now `region-pin`.
 
 ## Install
 
