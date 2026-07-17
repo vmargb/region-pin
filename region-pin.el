@@ -1,7 +1,7 @@
 ;;; region-pin.el --- Syntax-highlighted code snippets, pinned over your buffer -*- lexical-binding: t; -*-
 
 ;; Author: vmargb
-;; Version: 0.2.1
+;; Version: 0.2.2
 ;; Package-Requires: ((emacs "26.1"))
 ;; Keywords: convenience, tools
 
@@ -16,7 +16,7 @@
 ;;   1. Select a region
 ;;   2. M-x region-pin-save with a name
 ;;   3. M-x region-pin-show `completing-read' over saved pin names
-;;   4. M-x region-pin-hide removes it.
+;;   4. M-x region-pin-hide toggles the visibility on and off.
 ;;
 ;; Pins persist across Emacs restarts `region-pin-save-file'
 ;;
@@ -91,6 +91,12 @@ Plist keys: :text :mode :file :line :date.")
 
 (defvar region-pin--current-name nil
   "Name of the pin currently being previewed, if there is any.")
+
+(defvar region-pin--last-name nil
+  "Name of the last pin that was previewed.")
+
+(defvar region-pin--last-pin nil
+  "Data of the last pin that was previewed.")
 
 (defconst region-pin--buffer-name " *region-pin*"
   "Name of the (single, reused) buffer used to render pin.")
@@ -352,6 +358,8 @@ different parent than TARGET, it's deleted and recreated instead of reparented."
 (defun region-pin--display (name pin)
   "Render NAME/PIN using whichever backend fits the current display."
   (setq region-pin--current-name name)
+  (setq region-pin--last-name name)
+  (setq region-pin--last-pin pin)
   (let ((buf (get-buffer-create region-pin--buffer-name)))
     (region-pin--populate-buffer buf name pin)
     (if (display-graphic-p)
@@ -372,21 +380,31 @@ Calling this again with the pin already showing hides it (toggle)."
            (or (and (eq region-pin--backend 'frame) (frame-live-p region-pin--frame)
                     (frame-visible-p region-pin--frame))
                (and (eq region-pin--backend 'window) (window-live-p region-pin--window))))
-      (region-pin-hide)
+      (region-pin-hide t)
     (let ((pin (gethash name region-pin--pins)))
       (unless pin (user-error "No pin named \"%s\"" name))
       (region-pin--display name pin))))
 
 ;;;###autoload
-(defun region-pin-hide ()
-  "Remove the currently displayed pin preview."
-  (interactive)
-  (pcase region-pin--backend
-    ('frame (when (frame-live-p region-pin--frame)
-              (make-frame-invisible region-pin--frame)))
-    ('window (when (window-live-p region-pin--window)
-               (delete-window region-pin--window))))
-  (setq region-pin--window nil))
+(defun region-pin-hide (&optional force-hide)
+  "Toggle the visibility of the region-pin preview.
+With optional prefix argument FORCE-HIDE, only hide and do not toggle."
+  (interactive "P")
+  (let ((visible (or (and (eq region-pin--backend 'frame)
+                          (frame-live-p region-pin--frame)
+                          (frame-visible-p region-pin--frame))
+                     (and (eq region-pin--backend 'window)
+                          (window-live-p region-pin--window)))))
+    (if (or visible force-hide)
+        (progn
+          (pcase region-pin--backend
+            ('frame (when (frame-live-p region-pin--frame)
+                      (make-frame-invisible region-pin--frame)))
+            ('window (when (window-live-p region-pin--window)
+                       (delete-window region-pin--window)
+                       (setq region-pin--window nil)))))
+      (when (and region-pin--last-name region-pin--last-pin)
+        (region-pin--display region-pin--last-name region-pin--last-pin)))))
 
 (defun region-pin--cycle (direction)
   "Move to the next (DIRECTION 1) or previous (DIRECTION -1) pin."
@@ -421,7 +439,7 @@ Calling this again with the pin already showing hides it (toggle)."
   (interactive)
   (when region-pin--current-name
     (region-pin-delete region-pin--current-name)
-    (region-pin-hide)))
+    (region-pin-hide t)))
 
 ;;;###autoload
 (defun region-pin-clear-all ()
@@ -430,7 +448,7 @@ Calling this again with the pin already showing hides it (toggle)."
   (when (yes-or-no-p "Delete ALL saved pins? ")
     (clrhash region-pin--pins)
     (region-pin--save-to-disk)
-    (region-pin-hide)
+    (region-pin-hide t)
     (message "All pins deleted.")))
 
 ;;; preview buffer minor mode

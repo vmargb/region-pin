@@ -29,7 +29,7 @@ automatically falls back to a window split docked to the top of the frame.
 #### ..LSP?
 LSP definitely solves this problem easily. However it's a heavy solution
 for a simple task. And also, not everyone chooses to use LSP, I certainly prefer
-lighter options when they exist, such as [dumbjump](https://github.com/jacktasia/dumb-jump), and now `region-pin`.
+lighter options when they exist, such as [dumb-jump](https://github.com/jacktasia/dumb-jump), and now `region-pin`.
 
 ## Install
 
