@@ -217,11 +217,36 @@ Unlike `region-pin-save', this does not persist the pin to disk."
 
 ;;; Follow and show region (using dumb-jump)
 
-(defcustom region-pin-follow-lines 15
+(defcustom region-pin-follow-lines 10
   "Fallback number of lines to grab when defun bounds can't be found.
 Used by `region-pin-follow' when `beginning-of-defun'/`end-of-defun' fails."
   :type 'integer
   :group 'region-pin)
+
+(defun region-pin--dumb-jump-candidate-string (item)
+  "Format ITEM (`xref-item') as a human-readable completion candidate."
+  (let* ((loc (xref-item-location item))
+         (file (xref-location-group loc))
+         (line (xref-location-line loc))
+         (summary (string-trim (or (xref-item-summary item) ""))))
+    (format "%-40s %s"
+            (format "%s:%s" (if file (file-relative-name file) "?") (or line "?"))
+            summary)))
+
+(defun region-pin--dumb-jump-choose (items id)
+  "Return one of ITEMS (from `xref-item') for identifier ID.
+If there's only one candidate, return it directly.  Otherwise prompt
+with `completing-read', showing each candidate's file, line, and a
+snippet of the matched line so you can tell them apart."
+  (if (null (cdr items))
+      (car items)
+    (let* ((alist (mapcar (lambda (it)
+                            (cons (region-pin--dumb-jump-candidate-string it) it))
+                          items))
+           (choice (completing-read
+                    (format "%d matches for \"%s\", pick one: " (length items) id)
+                    alist nil t)))
+      (cdr (assoc choice alist)))))
 
 (defun region-pin--dumb-jump-marker (&optional identifier)
   "Look up IDENTIFIER (or the symbol at point) via dumb-jump.
@@ -237,29 +262,34 @@ opens a window, or moves point, just returns a marker or signals a `user-error'.
     (let ((items (xref-backend-definitions 'dumb-jump id)))
       (unless items
         (user-error "dumb-jump found no definition for \"%s\"" id))
-      (when (cdr items)
-        (message "region-pin-follow: %d matches for \"%s\", using the first"
-                 (length items) id))
-      (xref-location-marker (xref-item-location (car items))))))
+      (xref-location-marker
+       (xref-item-location (region-pin--dumb-jump-choose items id))))))
 
 (defun region-pin--grab-defun-at (marker)
   "Return (TEXT . MODE) captured at MARKER.
-Prefers the whole definition via `beginning-of-defun'/`end-of-defun'.
-Falls back to a flat `region-pin-follow-lines' line grab if those fail."
+Gets whole definition via `beginning-of-defun'/`end-of-defun',
+`beginning-of-defun' isn't always reliable, falls back to a flat
+`region-pin-follow-lines' line grab, anchored at MARKER."
   (with-current-buffer (marker-buffer marker)
     (save-excursion
-      (goto-char (marker-position marker))
-      (let (beg end)
+      (let ((pos (marker-position marker))
+            beg end)
+        (goto-char pos)
+        (forward-line 1) ; prevents walking to previous defun
+        ;; grabs beginning and end of defun
         (condition-case nil
             (progn
               (beginning-of-defun)
               (setq beg (point))
               (end-of-defun)
+              (forward-line 1) ; grabs last truncated line
               (setq end (point)))
           (error (setq beg nil)))
-        (when (or (null beg) (= beg end)
-                  (> (count-lines beg end) (* 4 region-pin-follow-lines)))
-          (goto-char (marker-position marker))
+        ;; falback to grabbing first n lines instead
+        (unless (and beg end
+                     (<= beg pos end)
+                     (<= (count-lines beg end) (* 4 region-pin-follow-lines)))
+          (goto-char pos)
           (setq beg (line-beginning-position))
           (forward-line region-pin-follow-lines)
           (setq end (point)))
@@ -403,7 +433,7 @@ different parent than TARGET, it's deleted and recreated instead of reparented."
     (let ((pos (region-pin--frame-position frame)))
         (set-frame-position frame (car pos) (cdr pos)))
     (make-frame-visible frame)
-    ;; emacs shifts focus to the child frame
+    ;; shifts focus to the child frame
     ;; force it back so keyboard input keeps going to the code
     (unless (eq (selected-frame) target)
       (select-frame target))
