@@ -215,6 +215,80 @@ Unlike `region-pin-save', this does not persist the pin to disk."
       (deactivate-mark)
       (region-pin--display name pin))))
 
+;;; Follow and show region (using dumb-jump)
+
+(defcustom region-pin-follow-lines 15
+  "Fallback number of lines to grab when defun bounds can't be found.
+Used by `region-pin-follow' when `beginning-of-defun'/`end-of-defun' fails."
+  :type 'integer
+  :group 'region-pin)
+
+(defun region-pin--dumb-jump-marker (&optional identifier)
+  "Look up IDENTIFIER (or the symbol at point) via dumb-jump.
+Uses dumb-jump's xref backend directly, so this works regardless of
+whatever `xref-backend-functions' is configured, and never jumps,
+opens a window, or moves point, just returns a marker or signals a `user-error'."
+  (unless (require 'dumb-jump nil t)
+    (user-error "region-pin-follow needs the `dumb-jump' package installed"))
+  (require 'xref)
+  (let ((id (or identifier (xref-backend-identifier-at-point 'dumb-jump))))
+    (unless id
+      (user-error "No identifier at point"))
+    (let ((items (xref-backend-definitions 'dumb-jump id)))
+      (unless items
+        (user-error "dumb-jump found no definition for \"%s\"" id))
+      (when (cdr items)
+        (message "region-pin-follow: %d matches for \"%s\", using the first"
+                 (length items) id))
+      (xref-location-marker (xref-item-location (car items))))))
+
+(defun region-pin--grab-defun-at (marker)
+  "Return (TEXT . MODE) captured at MARKER.
+Prefers the whole definition via `beginning-of-defun'/`end-of-defun'.
+Falls back to a flat `region-pin-follow-lines' line grab if those fail."
+  (with-current-buffer (marker-buffer marker)
+    (save-excursion
+      (goto-char (marker-position marker))
+      (let (beg end)
+        (condition-case nil
+            (progn
+              (beginning-of-defun)
+              (setq beg (point))
+              (end-of-defun)
+              (setq end (point)))
+          (error (setq beg nil)))
+        (when (or (null beg) (= beg end)
+                  (> (count-lines beg end) (* 4 region-pin-follow-lines)))
+          (goto-char (marker-position marker))
+          (setq beg (line-beginning-position))
+          (forward-line region-pin-follow-lines)
+          (setq end (point)))
+        ;; make sure the captured region is actually fontified before
+        ;; copying, same reasoning as in `region-pin-save'
+        (if (fboundp 'font-lock-ensure)
+            (font-lock-ensure beg end)
+          (with-no-warnings (font-lock-fontify-region beg end)))
+        (cons (buffer-substring beg end) major-mode)))))
+
+;;;###autoload
+(defun region-pin-follow (&optional identifier)
+  "Find IDENTIFIER via dumb-jump and pin it.
+Looks up the definition using `dumb-jump', grabs a snippet from there,
+like `region-pin-instant', the pin is not persisted to disk."
+  (interactive)
+  (let* ((marker (region-pin--dumb-jump-marker identifier))
+         (text-mode (region-pin--grab-defun-at marker))
+         (text (car text-mode))
+         (file (buffer-file-name (marker-buffer marker)))
+         (line (with-current-buffer (marker-buffer marker)
+                 (line-number-at-pos (marker-position marker))))
+         (pin (list :text text
+                    :mode (cdr text-mode)
+                    :file (or file (buffer-name (marker-buffer marker)))
+                    :line line
+                    :date (format-time-string "%Y-%m-%d %H:%M"))))
+    (region-pin--display (region-pin--default-name text) pin)))
+
 
 ;;; Sizing
 
