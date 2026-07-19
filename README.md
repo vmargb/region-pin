@@ -11,29 +11,28 @@
 You're editing code that uses a long struct, enum, function (or any other chunk of code)
 defined somewhere far away, in another file, and you keep
 jumping back and forth to remember the field or arg names. `region-pin` lets you save
-that snippet once under a name, then preview a syntax-highlighted
+that snippet once under a name, then preview a
 floating preview of it in the corner of your window. 
 
 You don't even have to find it yourself: `region-pin-follow` will find the
 definition for you (via [dumb-jump](https://github.com/jacktasia/dumb-jump)) and
-float it instantly, without ever moving your cursor or opening a new window.
+float it instantly, without moving your cursor or opening a new window.
 
 #### Why not just split the window?
 
 This was the design of *v0.1.0*, and it wasted space. A full-width split
 ends up showing a huge blank margin of unused space next to the snippet you actually want.
-Not to mention, when you already have a complicated window configuration,
-adding one more gets even messier.
+When you already have a complicated window configuration, adding another gets even messier.
 
-**Note:**: Terminal Emacs doesn't support child frames, in this case it
-automatically falls back to a window split docked to the top of the frame.
+**Note:** Terminal Emacs doesn't support child frames, in this case it
+automatically falls back to the original design.
 
 #### ..LSP?
 LSP definitely solves this easily. However it's a heavy solution
 for a simple task. And also, not everyone wants to use LSP, I certainly prefer
 lighter alternatives when they exist.
 
-## Install
+## Install with `package-vc-install` (Emacs 29+)
 
 ```elisp
 (use-package region-pin
@@ -57,18 +56,18 @@ Or with `use-package` + `:load-path`:
 (global-set-key (kbd "C-c p n") #'region-pin-next)    ; go to next named region
 (global-set-key (kbd "C-c p P") #'region-pin-previous); go to previous named region
 (global-set-key (kbd "C-c p d") #'region-pin-delete)  ; delete a named region
-(global-set-key (kbd "C-c p f") #'region-pin-follow)  ; find + pin definition at point (needs dumb-jump)
+(global-set-key (kbd "C-c p f") #'region-pin-follow)  ; find + pin definition at point
 ```
 
 ## Auto-find (requires `dumb-jump`)
 
-`region-pin-follow` looks up the symbol at point via
+`region-pin-follow` looks up the symbol at point with
 [dumb-jump](https://github.com/jacktasia/dumb-jump) and floats the definition it
-finds, the same way `region-pin-instant`.
+finds, the same way as `region-pin-instant`.
 
 By default it tries to capture the whole enclosing definition
 (`beginning-of-defun`/`end-of-defun`), and falls back to a flat number of lines
-if that fails. 
+instead if that fails. 
 
 ## Customization
 
