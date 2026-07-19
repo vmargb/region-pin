@@ -8,28 +8,30 @@
 ---
 
 ## The problem this solves:
-You're editing code that uses a long struct, function (or any other chunk of code)
-defined somewhere far away or in another file, and you keep
+You're editing code that uses a long struct, enum, function (or any other chunk of code)
+defined somewhere far away, in another file, and you keep
 jumping back and forth to remember the field or arg names. `region-pin` lets you save
 that snippet once under a name, then preview a syntax-highlighted
 floating preview of it in the corner of your window. 
+
+You don't even have to find it yourself: `region-pin-follow` will find the
+definition for you (via [dumb-jump](https://github.com/jacktasia/dumb-jump)) and
+float it instantly, without ever moving your cursor or opening a new window.
 
 #### Why not just split the window?
 
 This was the design of *v0.1.0*, and it wasted space. A full-width split
 ends up showing a huge blank margin of unused space next to the snippet you actually want.
-Not to mention, when you already have a complicated window configuration set up,
+Not to mention, when you already have a complicated window configuration,
 adding one more gets even messier.
 
-Instead, `region-pin` *floats* at the top of the frame regardless of your window configuration.
-
-However, terminal Emacs doesn't support child frames, in this case it
+**Note:**: Terminal Emacs doesn't support child frames, in this case it
 automatically falls back to a window split docked to the top of the frame.
 
 #### ..LSP?
-LSP definitely solves this problem easily. However it's a heavy solution
-for a simple task. And also, not everyone chooses to use LSP, I certainly prefer
-lighter options when they exist, such as [dumb-jump](https://github.com/jacktasia/dumb-jump), and now `region-pin`.
+LSP definitely solves this easily. However it's a heavy solution
+for a simple task. And also, not everyone wants to use LSP, I certainly prefer
+lighter alternatives when they exist.
 
 ## Install
 
@@ -55,7 +57,18 @@ Or with `use-package` + `:load-path`:
 (global-set-key (kbd "C-c p n") #'region-pin-next)    ; go to next named region
 (global-set-key (kbd "C-c p P") #'region-pin-previous); go to previous named region
 (global-set-key (kbd "C-c p d") #'region-pin-delete)  ; delete a named region
+(global-set-key (kbd "C-c p f") #'region-pin-follow)  ; find + pin definition at point (needs dumb-jump)
 ```
+
+## Auto-find (requires `dumb-jump`)
+
+`region-pin-follow` looks up the symbol at point via
+[dumb-jump](https://github.com/jacktasia/dumb-jump) and floats the definition it
+finds, the same way `region-pin-instant`.
+
+By default it tries to capture the whole enclosing definition
+(`beginning-of-defun`/`end-of-defun`), and falls back to a flat number of lines
+if that fails. 
 
 ## Customization
 
@@ -65,4 +78,5 @@ Or with `use-package` + `:load-path`:
 (setq region-pin-max-height 20)
 (setq region-pin-margin 12)            ; gap in pixels from the window edge
 (setq region-pin-header-icon "📌")     ; set to just "" to disable the icon
+(setq region-pin-follow-lines 15)      ; fallback line count for region-pin-follow
 ```
