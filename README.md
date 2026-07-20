@@ -14,9 +14,9 @@ jumping back and forth to remember the field or arg names. `region-pin` lets you
 that snippet once under a name, then preview a
 floating preview of it in the corner of your window. 
 
-You don't even have to find it yourself: `region-pin-follow` will find the
-definition for you (via [dumb-jump](https://github.com/jacktasia/dumb-jump)) and
-float it instantly, without moving your cursor or opening a new window.
+You don't even have to find it yourself: `region-pin-follow` will look up the
+definition for you and float it instantly. It automatically uses whatever
+`M-.` points to in Emacs's own `xref` layer.
 
 #### Why not just split the window?
 
@@ -29,8 +29,11 @@ automatically falls back to the original design.
 
 #### ..LSP?
 LSP definitely solves this easily. However it's a heavy solution
-for a simple task. And also, not everyone wants to use LSP, I certainly prefer
-lighter alternatives when they exist.
+for a simple task. And also, not everyone wants to run LSP in the background,
+I certainly prefer lighter alternatives when they exist.
+
+However, if you *do* already use LSP, `region-pin` will use its search feature
+automatically instead of `dumb-jump`.
 
 ## Install with `package-vc-install` (Emacs 29+)
 
@@ -58,16 +61,6 @@ Or with `use-package` + `:load-path`:
 (global-set-key (kbd "C-c p d") #'region-pin-delete)  ; delete a named region
 (global-set-key (kbd "C-c p f") #'region-pin-follow)  ; find + pin definition at point
 ```
-
-## Auto-find (requires `dumb-jump`)
-
-`region-pin-follow` looks up the symbol at point with
-[dumb-jump](https://github.com/jacktasia/dumb-jump) and floats the definition it
-finds, the same way as `region-pin-instant`.
-
-By default it tries to capture the whole enclosing definition
-(`beginning-of-defun`/`end-of-defun`), and falls back to a flat number of lines(`region-pin-follow-lines`)
-instead if that fails. 
 
 ## Customization (defaults)
 
