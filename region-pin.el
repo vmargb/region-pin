@@ -365,7 +365,6 @@ NAME is nil for ephemeral pins (`region-pin-instant', `region-pin-follow')"
     (setq-local cursor-type nil)
     (setq-local cursor-in-non-selected-windows nil)
     (setq-local vertical-scroll-bar nil)
-    (region-pin-preview-mode 1)
     (setq buffer-read-only t)))
 
 ;; =============================================
@@ -518,7 +517,7 @@ With optional prefix argument FORCE-HIDE, only hide and do not toggle."
             ('window (when (window-live-p region-pin--window)
                        (delete-window region-pin--window)
                        (setq region-pin--window nil)))))
-      (when (and region-pin--last-name region-pin--last-pin)
+      (when region-pin--last-pin
         (region-pin--display region-pin--last-name region-pin--last-pin)))))
 
 (defun region-pin--cycle (direction)
@@ -565,15 +564,6 @@ With optional prefix argument FORCE-HIDE, only hide and do not toggle."
     (region-pin--save-to-disk)
     (region-pin-hide t)
     (message "All pins deleted.")))
-
-;;; preview buffer minor mode
-
-(defvar region-pin-preview-mode-map (make-sparse-keymap)
-  "Keymap active in region-pin preview buffers.")
-
-(define-minor-mode region-pin-preview-mode
-  "Minor mode for the region-pin preview buffer."
-  :keymap region-pin-preview-mode-map)
 
 ;; load any previously saved pins as soon as the package is loaded
 (region-pin--load)

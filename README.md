@@ -16,7 +16,8 @@ floating preview of it in the corner of your window.
 
 You don't even have to find it yourself: `region-pin-follow` will look up the
 definition for you and float it instantly. It automatically uses whatever
-`M-.` points to in Emacs's own `xref` layer.
+`M-.` points to in Emacs's own `xref` layer, preferably picking [dumbjump](https://github.com/jacktasia/dumb-jump) if
+it's available.
 
 #### Why not just split the window?
 
