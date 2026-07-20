@@ -206,14 +206,13 @@ Unlike `region-pin-save', this does not persist the pin to disk."
         (font-lock-ensure beg end)
       (with-no-warnings (font-lock-fontify-region beg end)))
     (let* ((text (buffer-substring-no-properties beg end))
-           (name (region-pin--default-name text))
            (pin (list :text text
                       :mode major-mode
                       :file (or (buffer-file-name) (buffer-name))
                       :line (line-number-at-pos beg)
                       :date (format-time-string "%Y-%m-%d %H:%M"))))
       (deactivate-mark)
-      (region-pin--display name pin))))
+      (region-pin--display nil pin))))
 
 ;;; Follow and show region (using dumb-jump)
 
@@ -321,7 +320,7 @@ like `region-pin-instant', the pin is not persisted to disk."
                     :file (or file (buffer-name (marker-buffer marker)))
                     :line line
                     :date (format-time-string "%Y-%m-%d %H:%M"))))
-    (region-pin--display (region-pin--default-name text) pin)))
+    (region-pin--display nil pin)))
 
 
 ;;; Sizing
@@ -342,6 +341,14 @@ capped by max width and height."
 
 ;;; Buffer content shared by both backends
 
+(defun region-pin--header-label (name pin)
+  "Return the header label for NAME/PIN.
+NAME is nil for ephemeral pins (`region-pin-instant', `region-pin-follow')"
+  (or name
+      (let ((file (plist-get pin :file))
+            (line (plist-get pin :line)))
+        (format "%s:%s" (if file (file-name-nondirectory file) "unnamed") (or line "?")))))
+
 (defun region-pin--populate-buffer (buf name pin)
   "Fill BUF with the preview content for NAME/PIN."
   (with-current-buffer buf
@@ -352,7 +359,7 @@ capped by max width and height."
     (setq header-line-format
           (if (string-empty-p region-pin-header-icon)
               nil
-            (format " %s %s (q/n/p/d)" region-pin-header-icon name)))
+            (format " %s %s" region-pin-header-icon (region-pin--header-label name pin))))
     (setq mode-line-format nil)
     (setq truncate-lines t)
     (setq-local cursor-type nil)
@@ -561,13 +568,7 @@ With optional prefix argument FORCE-HIDE, only hide and do not toggle."
 
 ;;; preview buffer minor mode
 
-(defvar region-pin-preview-mode-map
-  (let ((map (make-sparse-keymap)))
-    (define-key map "q" #'region-pin-hide)
-    (define-key map "n" #'region-pin-next)
-    (define-key map "p" #'region-pin-previous)
-    (define-key map "d" #'region-pin-delete-current)
-    map)
+(defvar region-pin-preview-mode-map (make-sparse-keymap)
   "Keymap active in region-pin preview buffers.")
 
 (define-minor-mode region-pin-preview-mode
