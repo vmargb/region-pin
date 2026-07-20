@@ -30,13 +30,14 @@ When you already have a complicated window configuration, adding another gets ev
 **Note:** Terminal Emacs doesn't support child frames, in this case it
 automatically falls back to the original design.
 
-#### ..LSP?
+#### ..LSP's signature help?
 LSP definitely solves this easily. However it's a heavy solution
-for a simple task. And also, not everyone wants to run LSP in the background,
+for a simple task. Also, not everyone wants to run LSP in the background,
 I certainly prefer lighter alternatives when they exist.
 
-However, if you *do* already use LSP, `region-pin` will use its search feature
-automatically instead of `dumb-jump`.
+But if you *do* already use =eglot= / =lsp-mode=, `region-pin` will use their search feature
+automatically instead of `dumb-jump`. However, the whole point is that you don't need
+LSP to do those tasks anymore.
 
 ## Install with `package-vc-install` (Emacs 29+)
 
