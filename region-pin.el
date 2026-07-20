@@ -265,8 +265,9 @@ Uses whichever backend `xref-find-backend' picks, the same one
         (let ((items (xref-backend-definitions backend id)))
           (unless items
             (user-error "No definition found for \"%s\"" id))
-          (xref-location-marker
-           (xref-item-location (region-pin--dumb-jump-choose items id))))))))
+          (cons (xref-location-marker
+                 (xref-item-location (region-pin--dumb-jump-choose items id)))
+                backend))))))
 
 (defun region-pin--grab-defun-at (marker)
   "Return (TEXT . MODE) captured at MARKER.
@@ -305,11 +306,13 @@ Gets whole definition via `beginning-of-defun'/`end-of-defun',
 
 ;;;###autoload
 (defun region-pin-follow (&optional identifier)
-  "Find IDENTIFIER via dumb-jump and pin it.
-Looks up the definition using `dumb-jump', grabs a snippet from there,
+  "Find IDENTIFIER via `xref' and pin it.
+Looks up the definition and grabs the snippet,
 like `region-pin-instant', the pin is not persisted to disk."
   (interactive)
-  (let* ((marker (region-pin--dumb-jump-marker identifier))
+  (let* ((marker-backend (region-pin--dumb-jump-marker identifier))
+         (marker (car marker-backend))
+         (backend (cdr marker-backend))
          (text-mode (region-pin--grab-defun-at marker))
          (text (car text-mode))
          (file (buffer-file-name (marker-buffer marker)))
@@ -319,6 +322,7 @@ like `region-pin-instant', the pin is not persisted to disk."
                     :mode (cdr text-mode)
                     :file (or file (buffer-name (marker-buffer marker)))
                     :line line
+                    :backend backend
                     :date (format-time-string "%Y-%m-%d %H:%M"))))
     (region-pin--display nil pin)))
 
@@ -336,6 +340,8 @@ capped by max width and height."
           (setq max-len (max max-len (- (line-end-position) (line-beginning-position))))
           (setq lines (1+ lines))
           (forward-line 1))
+        (when (stringp header-line-format)
+          (setq max-len (max max-len (string-width header-line-format))))
         (cons (min region-pin-max-width (max 8 (1+ max-len)))
               (min region-pin-max-height (max 1 lines)))))))
 
@@ -343,11 +349,17 @@ capped by max width and height."
 
 (defun region-pin--header-label (name pin)
   "Return the header label for NAME/PIN.
-NAME is nil for ephemeral pins (`region-pin-instant', `region-pin-follow')"
-  (or name
-      (let ((file (plist-get pin :file))
-            (line (plist-get pin :line)))
-        (format "%s:%s" (if file (file-name-nondirectory file) "unnamed") (or line "?")))))
+NAME is nil for ephemeral pins (`region-pin-instant', `region-pin-follow').
+If PIN has a :backend (set by `region-pin-follow'), append it also, so
+you can tell whether it came from LSP, dumb-jump, etags, etc."
+  (let ((label (or name
+                    (let ((file (plist-get pin :file))
+                          (line (plist-get pin :line)))
+                      (format "%s:%s" (if file (file-name-nondirectory file) "unnamed") (or line "?")))))
+        (backend (plist-get pin :backend)))
+    (if backend
+        (format "%s (%s)" label backend)
+      label)))
 
 (defun region-pin--populate-buffer (buf name pin)
   "Fill BUF with the preview content for NAME/PIN."
