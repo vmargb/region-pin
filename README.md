@@ -19,25 +19,9 @@ definition for you and float it instantly. It automatically uses whatever
 `M-.` points to in Emacs's own `xref` layer.
 
 Which chooses the best option between [dumb-jump](https://github.com/jacktasia/dumb-jump),
-LSP, or the programming language's own backend (like elisp).
+LSP, or the language's own backend (like elisp).
 
-#### Why not just split the window?
-
-This was the design of *v0.1.0*, and it wasted space. A full-width split
-ends up showing a huge blank margin of unused space next to the snippet you actually want.
-When you already have a complicated window configuration, adding another gets even messier.
-
-**Note:** Terminal Emacs doesn't support child frames, in this case it
-automatically falls back to the original design.
-
-#### ..LSP's signature help?
-LSP definitely solves this easily. However it's a heavy solution
-for a simple task. Also, not everyone wants to run LSP in the background,
-I certainly prefer lighter alternatives when they exist.
-
-But if you *do* already use =eglot= / =lsp-mode=, `region-pin` will use their search feature
-automatically instead of `dumb-jump`. However, the whole point is that you don't need
-LSP to do those tasks anymore.
+---
 
 ## Install with `package-vc-install` (Emacs 29+)
 
@@ -76,3 +60,23 @@ Or with `use-package` + `:load-path`:
 (setq region-pin-header-icon "📌")     ; set to just "" to disable the icon
 (setq region-pin-follow-lines 10)      ; fallback line count for region-pin-follow
 ```
+
+### FAQ
+
+#### Why not just split the window?
+
+This was the design of *v0.1.0*, and it wasted space. A full-width split
+ends up showing a huge blank margin of unused space next to the snippet you actually want.
+When you already have a complicated window configuration, adding another gets even messier.
+
+**Note:** Terminal Emacs doesn't support child frames, in this case it
+automatically falls back to the original design.
+
+#### ..LSP's signature help?
+LSP definitely solves this easily. However it's a heavy solution
+for a simple task. Also, not everyone wants to run LSP in the background,
+I certainly prefer lighter alternatives when they exist.
+
+But if you *do* already use `eglot` / `lsp-mode`, `region-pin` will use their search feature
+automatically instead of `dumb-jump`. However, the whole point is that you don't need
+LSP to do those tasks anymore.
