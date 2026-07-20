@@ -249,21 +249,25 @@ snippet of the matched line so you can tell them apart."
       (cdr (assoc choice alist)))))
 
 (defun region-pin--dumb-jump-marker (&optional identifier)
-  "Look up IDENTIFIER (or the symbol at point) via dumb-jump.
-Uses dumb-jump's xref backend directly, so this works regardless of
-whatever `xref-backend-functions' is configured, and never jumps,
-opens a window, or moves point, just returns a marker or signals a `user-error'."
-  (unless (require 'dumb-jump nil t)
-    (user-error "region-pin-follow needs the `dumb-jump' package installed"))
+  "Look up IDENTIFIER (symbol at point) with xref.
+Uses whichever backend `xref-find-backend' picks, the same one
+`xref-find-definitions' (M-.) could be either LSP or dumb-jump."
   (require 'xref)
-  (let ((id (or identifier (xref-backend-identifier-at-point 'dumb-jump))))
-    (unless id
-      (user-error "No identifier at point"))
-    (let ((items (xref-backend-definitions 'dumb-jump id)))
-      (unless items
-        (user-error "dumb-jump found no definition for \"%s\"" id))
-      (xref-location-marker
-       (xref-item-location (region-pin--dumb-jump-choose items id))))))
+  (save-excursion ; avoid movement
+    (save-window-excursion ; avoid window/buffer switch
+      (let* ((backend (or (xref-find-backend) ; find the best possible option first
+                           (progn
+                             (unless (require 'dumb-jump nil t)
+                               (user-error "region-pin-follow needs the `dumb-jump' package installed"))
+                             'dumb-jump)))
+             (id (or identifier (xref-backend-identifier-at-point backend))))
+        (unless id
+          (user-error "No identifier at point"))
+        (let ((items (xref-backend-definitions backend id)))
+          (unless items
+            (user-error "No definition found for \"%s\"" id))
+          (xref-location-marker
+           (xref-item-location (region-pin--dumb-jump-choose items id))))))))
 
 (defun region-pin--grab-defun-at (marker)
   "Return (TEXT . MODE) captured at MARKER.

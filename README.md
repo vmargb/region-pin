@@ -66,10 +66,10 @@ Or with `use-package` + `:load-path`:
 finds, the same way as `region-pin-instant`.
 
 By default it tries to capture the whole enclosing definition
-(`beginning-of-defun`/`end-of-defun`), and falls back to a flat number of lines
+(`beginning-of-defun`/`end-of-defun`), and falls back to a flat number of lines(`region-pin-follow-lines`)
 instead if that fails. 
 
-## Customization
+## Customization (defaults)
 
 ```elisp
 (setq region-pin-position 'top-right)  ; 'top-right (default), 'top-left, 'top-center
