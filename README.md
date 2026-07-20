@@ -1,7 +1,7 @@
 # region-pin.el
 
 <div align="center">
-  <img src="region-pin-example.png" alt="region-pin demo" width="800"/>
+  <img src="region-pin-demo.gif" alt="region-pin demo" width="800"/>
   <p><em><code>region-pin</code> demo</em></p>
 </div>
 
@@ -16,8 +16,10 @@ floating preview of it in the corner of your window.
 
 You don't even have to find it yourself: `region-pin-follow` will look up the
 definition for you and float it instantly. It automatically uses whatever
-`M-.` points to in Emacs's own `xref` layer, preferably picking [dumbjump](https://github.com/jacktasia/dumb-jump) if
-it's available.
+`M-.` points to in Emacs's own `xref` layer.
+
+Which chooses the best option between [dumb-jump](https://github.com/jacktasia/dumb-jump),
+LSP, or the programming language's own backend (like elisp).
 
 #### Why not just split the window?
 
@@ -71,5 +73,5 @@ Or with `use-package` + `:load-path`:
 (setq region-pin-max-height 20)
 (setq region-pin-margin 12)            ; gap in pixels from the window edge
 (setq region-pin-header-icon "📌")     ; set to just "" to disable the icon
-(setq region-pin-follow-lines 15)      ; fallback line count for region-pin-follow
+(setq region-pin-follow-lines 10)      ; fallback line count for region-pin-follow
 ```
