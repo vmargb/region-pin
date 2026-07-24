@@ -18,13 +18,11 @@ You don't even have to find it yourself: `region-pin-follow` will look up the
 definition for you and float it instantly. It automatically uses whatever
 `M-.` points to in Emacs's own `xref` layer.
 
-It will choose the best option between [dumb-jump](https://github.com/jacktasia/dumb-jump),
-LSP, or the language's own backend (like elisp).
+It will choose the best option between [dumb-jump](https://github.com/jacktasia/dumb-jump), `etags`,
+`LSP`, or the language's own backend (like elisp).
 
 If you don't even know where the thing you want is, `region-pin-imenu` lets you
 search every definition in the buffer and pin whichever one you pick.
-`region-pin-imenu-multi` widens that search to every buffer already open in the
-current project. Mirroring `consult-imenu-multi`.
 
 ---
 

@@ -1,7 +1,7 @@
 ;;; region-pin.el --- Syntax-highlighted code snippets, pinned over your buffer -*- lexical-binding: t; -*-
 
 ;; Author: vmargb
-;; Version: 0.2.2
+;; Version: 0.2.3
 ;; Package-Requires: ((emacs "26.1"))
 ;; Keywords: convenience, tools
 
@@ -24,6 +24,8 @@
 ;;; Code:
 
 (require 'subr-x)
+(require 'imenu)
+(require 'seq)
 
 (defgroup region-pin nil
   "Floating code snippets over your buffer."
@@ -42,7 +44,7 @@
   :group 'region-pin)
 
 (defcustom region-pin-max-width 80
-  "Maximum number of columns of the floating ppeview.
+  "Maximum number of columns of the floating preview.
 It never stretches to fill the window."
   :type 'integer
   :group 'region-pin)
@@ -304,6 +306,21 @@ Gets whole definition via `beginning-of-defun'/`end-of-defun',
           (with-no-warnings (font-lock-fontify-region beg end)))
         (cons (buffer-substring beg end) major-mode)))))
 
+;; shared helper used by region-pin-marker and region-pin-imenu
+(defun region-pin--pin-marker (marker &optional backend)
+  "Grab the defun at MARKER and float it as a non-named pin.
+BACKEND is shown in the preview header so you can tell how it was found."
+  (let* ((text-mode (region-pin--grab-defun-at marker))
+         (file (buffer-file-name (marker-buffer marker)))
+         (line (with-current-buffer (marker-buffer marker)
+                 (line-number-at-pos (marker-position marker)))))
+    (region-pin--display nil (list :text (car text-mode)
+                                    :mode (cdr text-mode)
+                                    :file (or file (buffer-name (marker-buffer marker)))
+                                    :line line
+                                    :backend backend
+                                    :date (format-time-string "%Y-%m-%d %H:%M")))))
+
 ;;;###autoload
 (defun region-pin-follow (&optional identifier)
   "Find IDENTIFIER via `xref' and pin it.
@@ -312,20 +329,52 @@ like `region-pin-instant', the pin is not persisted to disk."
   (interactive)
   (let* ((marker-backend (region-pin--dumb-jump-marker identifier))
          (marker (car marker-backend))
-         (backend (cdr marker-backend))
-         (text-mode (region-pin--grab-defun-at marker))
-         (text (car text-mode))
-         (file (buffer-file-name (marker-buffer marker)))
-         (line (with-current-buffer (marker-buffer marker)
-                 (line-number-at-pos (marker-position marker))))
-         (pin (list :text text
-                    :mode (cdr text-mode)
-                    :file (or file (buffer-name (marker-buffer marker)))
-                    :line line
-                    :backend backend
-                    :date (format-time-string "%Y-%m-%d %H:%M"))))
-    (region-pin--display nil pin)))
+         (backend (cdr marker-backend)))
+    (region-pin--pin-marker marker backend)))
 
+;;; Preview via imenu (point doesn't need to be anywhere near the target)
+
+(defun region-pin--imenu-flatten (index &optional prefix)
+  "Flatten imenu INDEX into a list of (LABEL . POSITION)."
+  (let (result)
+    (dolist (entry index)
+      (let* ((name (car entry))
+             (rest (cdr entry))
+             (label (if prefix (concat prefix "/" name) name)))
+        (cond
+         ((equal name "*Rescan*")) ; skip imenu's own pseudo-entry
+         ((and (consp rest) (consp (car rest)) (stringp (caar rest)))
+          ;; nested submenu, recurse and fold its results in
+          (dolist (sub (region-pin--imenu-flatten rest label))
+            (push sub result)))
+         (t
+          (push (cons label (if (consp rest) (car rest) rest)) result)))))
+    (nreverse result)))
+
+(defun region-pin--imenu-marker-at (pos buf)
+  "Return marker at POS in BUF.  POS may already be a marker."
+  (if (markerp pos)
+      pos
+    (with-current-buffer buf
+      (copy-marker pos))))
+
+(defun region-pin--buffer-imenu-candidates (buf)
+  "Return a (LABEL . MARKER) alist for every imenu entry in BUF."
+  (with-current-buffer buf
+    (let ((index (ignore-errors (imenu--make-index-alist t))))
+      (mapcar (lambda (c) (cons (car c) (region-pin--imenu-marker-at (cdr c) buf)))
+              (region-pin--imenu-flatten index)))))
+
+;;;###autoload
+(defun region-pin-imenu ()
+  "Pick any definition in the buffer via `imenu' and pin it."
+  (interactive)
+  (let ((candidates (region-pin--buffer-imenu-candidates (current-buffer))))
+    (unless candidates
+      (user-error "No imenu index available for this buffer (mode: %s)" major-mode))
+    (let* ((choice (completing-read "Pin symbol: " candidates nil t))
+           (marker (cdr (assoc choice candidates))))
+      (region-pin--pin-marker marker 'imenu))))
 
 ;;; Sizing
 
